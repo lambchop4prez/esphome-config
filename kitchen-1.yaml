@@ -1,0 +1,75 @@
+esphome:
+  name: kitchen-1
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Kitchen Fallback"
+    password: "huo1rMZ7ugdp"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+esp32_touch:
+  setup_mode: true
+
+output:
+  - platform: ledc
+    id: output_red
+    pin: GPIO25
+  - platform: ledc
+    id: output_green
+    pin: GPIO26
+  - platform: ledc
+    id: output_blue
+    pin: GPIO33
+  - platform: gpio
+    id: output_under_cabinet
+    pin: GPIO32
+
+switch:
+  - platform: template
+    name: "Under Cabinet Switch"
+    id: under_cabinet_switch
+    inverted: true
+    turn_on_action:
+      - light.turn_on: under_cabinet_light
+    turn_off_action:
+      - light.turn_off: under_cabinet_light
+  # - platform: gpio
+  #   id: gpio_switch
+  #   pin: GPIO??
+  #   name: "Under Cabinet Tactile Switch"
+  #   on_press:
+  #     - switch.toggle: under_cabinet_switch
+
+binary_sensor:
+  - platform: esp32_touch
+    name: "Under Cabinet Pin"
+    threshold: 500
+    pin: GPIO27
+    on_release:
+      - switch.toggle: under_cabinet_switch
+
+light:
+  - platform: rgb
+    name: "Above Cabinet RGB LED"
+    red: output_red
+    green: output_green
+    blue: output_blue
+  - platform: binary
+    name: "Under Cabinet LED"
+    output: output_under_cabinet
+    id: under_cabinet_light

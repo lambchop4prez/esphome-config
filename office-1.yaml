@@ -1,0 +1,68 @@
+esphome:
+  name: office-1
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "Office Fallback"
+    password: "huo1rMZ7ugdp"
+
+# mqqt:
+#   broker: 10.4.20.x
+#   username: office-1
+#   password: !secret mqqt_password
+
+captive_portal:
+
+logger:
+
+api:
+
+ota:
+
+spi:
+  clk_pin: D2
+  mosi_pin: D4
+  id: display_spi
+
+font:
+  id: digit_font
+  file: "pixelmix.ttf"
+  size: 8
+
+display:
+  - platform: max7219digit
+    cs_pin: D3
+    num_chips: 4
+    intensity: 7
+    spi_id: display_spi
+    lambda: |-
+      it.write(d)
+      it.strftime(0, 0, id(digit_font), "%H:%M", id(sntp_time).now());
+
+time:
+  - platform: sntp
+    id: sntp_time
+
+sensor:
+  - platform: dht
+    pin: D13
+    temperature:
+      id: office_temperature
+      name: "Office Temperature"
+      unit_of_measurement: "°F"
+      device_class: "temperature"
+    humidity:
+      id: office_humidity
+      name: "Office Humidity"
+      device_class: "humidity"
+
+# sensor:
+#   - platform: mqqt_subscribe
+#     name: "Display queue"
+#     id: display_queue
+#     topic: office/display

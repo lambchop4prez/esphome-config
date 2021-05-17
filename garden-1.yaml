@@ -1,0 +1,68 @@
+esphome:
+  name: garden-1
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "Garden Fallback"
+    password: "fyGV6Y7bRk"
+
+# globals:
+#   - id: interval_on_min
+#     type: int
+#     restore_value: false
+#     initial_value: 1
+#   - id: interval_off_min
+#     type: int
+#     restore_value: false
+#     initial_value: 3
+#   - id: counter
+#     type: int
+#     restore_value: false
+#     initial_value: 0
+
+captive_portal:
+logger:
+api:
+ota:
+
+switch:
+  - platform: template
+    name: Irrigation Zone 1
+    id: irrigation_zone_1
+    lambda: return id(relay1).state;
+    optimistic: true
+    turn_on_action:
+      - switch.turn_on: relay1
+    turn_off_action:
+      - switch.turn_off: relay1
+  - platform: gpio
+    pin: D4
+    id: relay1
+
+
+script:
+  - id: irrigation_cycle
+    mode: single
+    then:
+      - switch.turn_on: irrigation_zone_1
+      - delay: 30s
+      - switch.turn_off: irrigation_zone_1
+
+interval:
+  - interval: 15min
+    then:
+      - script.execute: irrigation_cycle
+
+
+time:
+  - platform: sntp
+    id: home_time
+    timezone: America/Detroit
+    servers:
+      - "10.4.20.115"
+      - "0.us.pool.ntp.org"
+      - "1.us.pool.ntp.org"
