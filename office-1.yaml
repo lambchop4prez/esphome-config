@@ -1,7 +1,7 @@
 esphome:
   name: office-1
-  platform: ESP8266
-  board: nodemcuv2
+  platform: ESP32
+  board: nodemcu-32s
 
 wifi:
   ssid: !secret wifi_ssid
@@ -24,42 +24,60 @@ api:
 
 ota:
 
-spi:
-  clk_pin: D2
-  mosi_pin: D4
-  id: display_spi
+# spi:
+#   clk_pin: D2
+#   mosi_pin: D4
+#   id: display_spi
+#
+# font:
+#   id: digit_font
+#   file: "pixelmix.ttf"
+#   size: 8
 
-font:
-  id: digit_font
-  file: "pixelmix.ttf"
-  size: 8
-
-display:
-  - platform: max7219digit
-    cs_pin: D3
-    num_chips: 4
-    intensity: 7
-    spi_id: display_spi
-    lambda: |-
-      it.write(d)
-      it.strftime(0, 0, id(digit_font), "%H:%M", id(sntp_time).now());
+# display:
+#   - platform: max7219digit
+#     cs_pin: D3
+#     num_chips: 4
+#     intensity: 7
+#     spi_id: display_spi
+#     lambda: |-
+#       it.write(d)
+#       it.strftime(0, 0, id(digit_font), "%H:%M", id(sntp_time).now());
 
 time:
   - platform: sntp
     id: sntp_time
+i2c:
+  sda: 12
+  scl: 13
+  scan: True
+  id: bus_a
 
 sensor:
-  - platform: dht
-    pin: D13
+  - platform: bme280
     temperature:
-      id: office_temperature
-      name: "Office Temperature"
-      unit_of_measurement: "°F"
-      device_class: "temperature"
+      name: "BME280 Temperature"
+      oversampling: 16x
+    pressure:
+      name: "BME280 Pressure"
     humidity:
-      id: office_humidity
-      name: "Office Humidity"
-      device_class: "humidity"
+      name: "BME280 Humidity"
+    i2c_id: bus_a
+    address: 0x76
+    update_interval: 60s
+
+# sensor:
+#   - platform: dht
+#     pin: D13
+#     temperature:
+#       id: office_temperature
+#       name: "Office Temperature"
+#       unit_of_measurement: "°F"
+#       device_class: "temperature"
+#     humidity:
+#       id: office_humidity
+#       name: "Office Humidity"
+#       device_class: "humidity"
 
 # sensor:
 #   - platform: mqqt_subscribe

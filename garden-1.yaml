@@ -10,23 +10,29 @@ wifi:
     ssid: "Garden Fallback"
     password: "fyGV6Y7bRk"
 
-# globals:
-#   - id: interval_on_min
-#     type: int
-#     restore_value: false
-#     initial_value: 1
-#   - id: interval_off_min
-#     type: int
-#     restore_value: false
-#     initial_value: 3
-#   - id: counter
-#     type: int
-#     restore_value: false
-#     initial_value: 0
+globals:
+  - id: interval_on_min
+    type: int
+    restore_value: false
+    initial_value: 1
+  - id: interval_off_min
+    type: int
+    restore_value: false
+    initial_value: 3
+  - id: counter
+    type: int
+    restore_value: false
+    initial_value: 0
 
 captive_portal:
 logger:
 api:
+  services:
+    - service: run_zone_1
+      then:
+        - script.execute: irrigation_cycle
+
+
 ota:
 
 switch:
@@ -53,7 +59,8 @@ script:
       - switch.turn_off: irrigation_zone_1
 
 interval:
-  - interval: 15min
+  - id: irrigation_zone_1_interval
+    interval: 15min
     then:
       - script.execute: irrigation_cycle
 
