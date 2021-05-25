@@ -23,6 +23,12 @@ globals:
 captive_portal:
 logger:
 api:
+  services:
+    - service: run_zone_1
+      then:
+        - script.execute: irrigation_cycle
+
+
 ota:
 
 
@@ -62,7 +68,8 @@ script:
       - switch.turn_off: irrigation_zone_1
 
 interval:
-  - interval:
+  - id: irrigation_zone_1_interval
+    interval:
       seconds: id(interval_off_sec)
     then:
       - script.execute: irrigation_cycle
