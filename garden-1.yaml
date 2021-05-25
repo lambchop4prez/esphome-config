@@ -10,24 +10,26 @@ wifi:
     ssid: "Garden Fallback"
     password: "fyGV6Y7bRk"
 
-# globals:
-#   - id: interval_on_min
-#     type: int
-#     restore_value: false
-#     initial_value: 1
-#   - id: interval_off_min
-#     type: int
-#     restore_value: false
-#     initial_value: 3
-#   - id: counter
-#     type: int
-#     restore_value: false
-#     initial_value: 0
+globals:
+  - id: interval_on_sec
+    type: int
+    restore_value: false
+    initial_value: 30
+  - id: interval_off_sec
+    type: int
+    restore_value: false
+    initial_value: 6000
 
 captive_portal:
 logger:
 api:
 ota:
+
+
+binary_sensor:
+  - platform: template
+    name: "Irrigation Zone 1 State"
+    id: irrigation_zone_1_state
 
 switch:
   - platform: template
@@ -37,8 +39,14 @@ switch:
     optimistic: true
     turn_on_action:
       - switch.turn_on: relay1
+      - binary_sensor.template.publish:
+          id: irrigation_zone_1_state
+          state: ON
     turn_off_action:
       - switch.turn_off: relay1
+      - binarry_sensor.template.publish:
+          id: irrigation_zone_1_state
+          state: OFF
   - platform: gpio
     pin: D4
     id: relay1
@@ -49,11 +57,13 @@ script:
     mode: single
     then:
       - switch.turn_on: irrigation_zone_1
-      - delay: 30s
+      - delay:
+          seconds: id(interval_on_sec)
       - switch.turn_off: irrigation_zone_1
 
 interval:
-  - interval: 15min
+  - interval:
+      seconds: id(interval_off_sec)
     then:
       - script.execute: irrigation_cycle
 
