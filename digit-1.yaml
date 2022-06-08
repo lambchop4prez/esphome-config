@@ -1,0 +1,36 @@
+esphome:
+  name: office-1
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+logger:
+ota:
+
+spi:
+  id: display_spi
+  clk_pin: GPIO22
+  mosi_pin: GPIO23
+
+font:
+  - id: digit_font
+    file: "Early GameBoy.ttf"
+    size: 8
+
+time:
+  - platform: sntp
+    id: sntp_time
+
+display:
+  - platform: max7219digit
+    cs_pin: GPIO5
+    num_chips: 4
+    intensity: 5
+    spi_id: display_spi
+    lambda: |-
+      it.strftime(0, -1, id(digit_font), "%H", id(sntp_time).now());
+      it.print(14, -1, id(digit_font), ":");
+      it.strftime(18, -1, id(digit_font), "%M", id(sntp_time).now());
