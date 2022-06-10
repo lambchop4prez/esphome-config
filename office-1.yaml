@@ -34,34 +34,33 @@ i2c:
 
 font:
   - id: digit_font
-    file: "pixelmix.ttf"
-    size: 10
-  - id: font3
-    file: "pixelmix.ttf"
+    file: "pixelmix_bold.ttf"
     size: 24
+  - id: font3
+    file: "Early-GameBoy.ttf"
+    size: 10
   - id: remixicon
     file: remixicon.ttf
     size: 10
-    glyphs:
-      - 0xf2bf
-      - 0xf2c1
 
 display:
   - platform: ssd1306_i2c
     model: "SH1106 128x64"
+    i2c_id: bus_a
     address: 0x3C
     lambda: |-
       it.rectangle(1, 1, 126, 62);
-      it.strftime(5, 10, id(font3), TextAlign::BASELINE_LEFT, "%H:%M", id(sntp_time).now());
+      it.strftime(5, 4, id(digit_font), "%H:%M", id(sntp_time).now());
 
       // Print wifi status
-      it.printf(125, 3, id(remixicon), TextAlign::TOP_RIGHT, "%s", wifi.connected ? "0xf2bf" : "0xf2c1");
+      //it.printf(125, 3, id(remixicon), TextAlign::TOP_RIGHT, "%s", "0xf2bf");
 
-      // Print inside temperature (from homeassistant sensor)
       if (id(bme280_temp).has_state()) {
-        it.printf(125, 10, id(digit_font), TextAlign::TOP_RIGHT , "%.1f°", id(bme280_temp).state);
+        it.printf(5, 32, id(font3), "%.1f°", id(bme280_temp).state);
       }
-
+      if (id(bme280_humidity).has_state()) {
+        it.printf(5, 44, id(font3), "%.1f%", id(bme280_humidity).state);
+      }
 # display:
 #   - platform: max7219digit
 #     cs_pin: D3
