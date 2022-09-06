@@ -17,15 +17,25 @@ captive_portal:
 # Enable logging
 logger:
 
+globals:
+  id: effects
+  type: std::string[3]
+  initial_value: "{\"addressable_rainbow\", \"addressable_scan\", \"addressable_fireworks\"}"
+
 # Enable Home Assistant API
 api:
 
 ota:
 
+i2c:
+  - id: bus_0
+    sda: 17
+    scl: 16
+
 output:
   - id: light_1
     platform: ledc
-    pin: GPIO02
+    pin: GPIO23
 
 
 light:
@@ -62,6 +72,22 @@ binary_sensor:
     name: "ESP32 Touch Pad GPIO27"
     pin: GPIO27
     threshold: 1000
-    on_press:
+    on_click:
       then:
         - light.toggle: under_cabinet_1
+    on_double_click:
+      then:
+        - if:
+            condition:
+              light.is_on: neopixel_0
+            then:
+              light.turn_off:
+                id: neopixel_0
+        - if:
+            condition:
+              light.is_off: neopixel_0
+            then:
+              light.turn_on:
+                id: neopixel_0
+                effect: !lambda |-
+                  return id(effects)[rand() % 3];
