@@ -1,0 +1,31 @@
+esphome:
+  name: rtc-test
+  platform: ESP32
+  board: nodemcu-32s
+  on_boot:
+    - ds1307.read_time:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "rtc-test"
+    password: "NoVNR2vHou"
+
+captive_portal:
+logger:
+api:
+ota:
+i2c:
+  - sda: 5
+    scl: 4
+    scan: true
+time:
+  - platform: ds1307
+    update_interval: never
+    address: 0x68
+  - platform: sntp
+    id: sntp_time
+    timezone: America/Detroit
+    on_time_sync:
+      - ds1307.write_time:
