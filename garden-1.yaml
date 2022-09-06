@@ -13,7 +13,7 @@ wifi:
 globals:
   - id: interval_on_sec
     type: int
-    restore_value: false
+    restore_value: true
     initial_value: 30
   - id: interval_off_sec
     type: int
@@ -23,10 +23,19 @@ globals:
 captive_portal:
 logger:
 api:
-  services:
-    - service: run_zone_1
-      then:
-        - script.execute: irrigation_cycle
+  # services:
+  #   - name: "Run Zone 1"
+  #     service: run_zone_1
+  #     then:
+  #       - script.execute: irrigation_cycle
+  #   - name: "Update on delay"
+  #     service: update_on_delay
+  #     variables:
+  #       new_interval: int
+  #     then:
+  #       - globals.set:
+  #           id: interval_on_sec
+  #           value: !lambda "return new_interval;"
 
 
 ota:
