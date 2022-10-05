@@ -1,6 +1,4 @@
-*
-!*.yaml
-!*.md
-!LICENSE
-!.gitignore
-
+.DS_Store
+.esphome/
+fonts/
+images/

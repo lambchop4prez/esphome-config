@@ -66,12 +66,10 @@ time:
       - seconds: 0
         minutes: 30
         hours: 7
-        days_of_week: MON-FRI
         then:
           - light.turn_on: light_1
       - seconds: 0
-        minutes: 30
-        hours: 19
-        days_of_week: MON-FRI
+        minutes: 00
+        hours: 23
         then:
           - light.turn_off: light_1

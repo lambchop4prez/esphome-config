@@ -7,6 +7,8 @@ substitutions:
   run_time: 5min #can be as long as needed to get data
   sleep_time: 20min # normal sleep time
   night_sleep_time: 6h # 1st sleep time after midnight
+  fonts_dir: ../fonts
+  images_dir: ../images
 
 esphome:
   name: ${esp_hostname}
@@ -25,6 +27,12 @@ wifi:
   ap:
     ssid: "${esp_name} Fallback Hotspot"
     # password: !secret ap_password
+
+globals:
+  - id: icon_wifi
+    type: std::string
+    restore_value: no
+    initial_value: '"\U000F092E"'
 
 time:
   - platform: sntp
@@ -52,18 +60,14 @@ api:
 ota:
 
 font:
-  - file: "fonts/Perfect DOS VGA 437.ttf"
+  - file: "${fonts_dir}/Perfect DOS VGA 437.ttf"
     id: vga_font
     size: 38
-  - file: "fonts/pixelmix.ttf"
+  - file: "${fonts_dir}/pixelmix.ttf"
     id: pixel_font
     size: 56
-  # - file: "fonts/GoogleSans-Medium.ttf"
-  #   id: font_footer
-  #   size: 28
- 
-    # https://pictogrammers.github.io/@mdi/font/5.3.45/
-  - file: 'fonts/materialdesignicons-webfont.ttf'
+  # https://pictogrammers.github.io/@mdi/font/5.3.45/
+  - file: '${fonts_dir}/materialdesignicons-webfont.ttf'
     id: font_icons
     size: 160
     glyphs:
@@ -83,7 +87,7 @@ font:
       - "\U000F059E" # windy-variant
       - "\U000F0F38" # exceptional
      
-  - file: 'fonts/materialdesignicons-webfont.ttf'
+  - file: '${fonts_dir}/materialdesignicons-webfont.ttf'
     id: font_icons_small
     size: 56
     glyphs:
@@ -113,7 +117,7 @@ font:
       - "\U000F0925" # wifi high
       - "\U000F0928" # wifi max
       - "\U000F092E" # wifi disconnected
-  - file: 'fonts/materialdesignicons-webfont.ttf'
+  - file: '${fonts_dir}/materialdesignicons-webfont.ttf'
     id: font_icons_tiny
     size: 28
     glyphs:
@@ -137,8 +141,13 @@ font:
       - "\U000F0BA3" # jack-o-lantern
 
 image:
-  - file: "images/bidoof.png"
+  - file: "${images_dir}/bidoof.png"
     id: img_bidoof
+    resize: 300x300
+    type: BINARY
+    dither: FLOYDSTEINBERG
+  - file: "${images_dir}/001Bulbasaur.png"
+    id: img_bulbasaur
     resize: 300x300
     type: BINARY
     dither: FLOYDSTEINBERG
@@ -183,6 +192,24 @@ sensor:
     id: wifi_strength
     name: "${esp_name} WiFi Signal"
     update_interval: 15s
+    on_value_range:
+      - above: -70
+        below: -66
+        then: 
+          - globals.set:
+              id: icon_wifi
+              value: '"\U000F091F"' # low
+      - above: -67
+        below: -50
+        then:
+          - globals.set:
+              id: icon_wifi
+              value: '"\U000F0922"' # Medium
+      - above: -50
+        then:
+          - globals.set:
+              id: icon_wifi
+              value: '"\U000F0928"' # High
   
   - platform: adc
     pin: GPIO36
@@ -240,10 +267,6 @@ sensor:
     internal: true
   
   - platform: homeassistant
-    entity_id: sensor.openweathermap_condition
-    id: weather_condition
-  
-  - platform: homeassistant
     entity_id: sensor.openweathermap_humidity
     id: weather_humidity
   
@@ -251,17 +274,17 @@ sensor:
     entity_id: sensor.openweathermap_pressure
     id: weather_pressure
 
-  - platform: sgp30
-    id: air_quality
-    eco2:
-      name: "Office eCO2"
-      accuracy_decimals: 1
-    tvoc:
-      name: "Office TVOC"
-      accuracy_decimals: 1
-    store_baseline: yes
-    address: 0x58
-    update_interval: 1s
+  # - platform: sgp30
+  #   id: air_quality
+  #   eco2:
+  #     name: "Office eCO2"
+  #     accuracy_decimals: 1
+  #   tvoc:
+  #     name: "Office TVOC"
+  #     accuracy_decimals: 1
+  #   store_baseline: yes
+  #   address: 0x58
+  #   update_interval: 1s
 
 binary_sensor:
   - platform: gpio
@@ -271,8 +294,8 @@ binary_sensor:
     name: "${esp_name} Button 1"
     on_press:
       then:
-       - script.execute: all_data_received
-       #- component.update: t5_display
+       - display.page.show_next: t5_display
+       - component.update: t5_display
 
   - platform: gpio
     pin:
@@ -285,12 +308,20 @@ binary_sensor:
       number: GPIO35
       inverted: true
     name: "${esp_name} Button 3"
+    on_press:
+      then:
+         - display.page.show_previous: t5_display
+         - component.update: t5_display
 
 text_sensor:
   - platform: homeassistant
     entity_id: sensor.openweathermap_precipitation_kind
     id: fc_prec
     internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.openweathermap_condition
+    id: weather_condition
 
   - platform: homeassistant
     entity_id: sensor.openweathermap_forecast_condition
@@ -322,7 +353,7 @@ script:
       - component.update: batt
       - component.update: sunrise
       - component.update: sunset
-      - component.update: air_quality
+      #- component.update: air_quality
       - display.page.show: weather
       - component.update: t5_display
       #- script.execute: enter_sleep
@@ -352,11 +383,15 @@ display:
   - platform: lilygo_t5_47
     id: t5_display
     rotation: 0
-    #update_interval: never
+    update_interval: never
     pages:
       - id: loading
         lambda: |-
+          #define xres 960
+          #define yres 540
           it.print(480, 15, id(vga_font), TextAlign::CENTER, "Loading");
+          it.print(xres - 30, 5, id(font_icons_tiny), TextAlign::TOP_CENTER, id(icon_wifi).c_str());
+
           it.image(480, 30, id(img_bidoof));
       - id: weather
         lambda: |-
@@ -408,10 +443,10 @@ display:
           //};
             it.print(xres - (30 + 5 + 30 + 5 + 30), 5, id(font_icons_tiny), TextAlign::TOP_CENTER, "\U000F0BA3");
             // Battery
-            string battery_icon = battery_icons[(int)id(batt).state % 10];
+            string battery_icon = battery_icons[((int)id(batt).state / 10) - 1];
             it.print(xres - (30 + 5 + 30), 5, id(font_icons_tiny), TextAlign::TOP_CENTER, battery_icon.c_str());
             // WiFi signal icon
-            it.print(xres - 30, 5, id(font_icons_tiny), TextAlign::TOP_CENTER, "\U000F05AA");
+            it.print(xres - 30, 5, id(font_icons_tiny), TextAlign::TOP_CENTER, id(icon_wifi).c_str());
           
           
           // Weather condition icon
@@ -468,5 +503,5 @@ display:
           it.printf(sunrise_icon_x+icon_pad, y + 56 + y_pad, id(vga_font), "%.5s", id(sunset).state.c_str());
           
           y+=125+y_pad;
-
-          it.image(xres/2, y, id(img_bidoof));
+          it.image(((xres / 4) - x_pad) - 150, y, id(img_bulbasaur));
+          it.image(((xres/2) + ((xres / 4) - x_pad)) - 150, y, id(img_bidoof));
