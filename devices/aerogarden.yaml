@@ -1,0 +1,89 @@
+---
+substitutions:
+  devicename: aerogarden
+  friendly_name: "AeroGarden"
+
+esphome:
+  name: ${devicename}
+esp32:
+  board: esp32dev
+
+<<: !include common.yaml
+
+output:
+  - platform: gpio
+    pin: GPIO23
+    id: output_led
+
+  - platform: gpio
+    pin: GPIO16
+    id: relay_1
+
+
+  # - platform: gpio
+  #   pin: GPIO17
+  #   id: relay_2
+
+
+light:
+  - platform: status_led
+    id: light_led
+    name: LED
+    output: output_led
+  - platform: binary
+    id: grow_light
+    name: "Grow Light"
+    output: relay_1
+    restore_mode: RESTORE_DEFAULT_ON
+
+
+# Relays exposed as switches
+switch:
+#   - platform: gpio
+#     pin: GPIO16
+#     id: relay_1
+#     name: Relay 1
+
+  - platform: gpio
+    pin: GPIO17
+    id: fogger
+    name: Relay 2
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: America/Detroit
+    on_time:
+      - seconds: 0
+        minutes: /10
+        then:
+          - switch.turn_on: fogger
+          - delay: 10s
+          - switch.turn_off: fogger
+      # Turn on light at 6 AM every day
+      - seconds: 0
+        minutes: 0
+        hours: 6
+        then:
+          - light.turn_on: grow_light
+      # Turn lights off at midnight
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        then:
+          - light.turn_off: grow_light
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: false
+
+sensor:
+  - platform: aht10
+    variant: AHT10
+    address: 0x38
+    temperature:
+      name: "${friendly_name} Temperature"
+    humidity:
+      name: "${friendly_name} Humidity"
+    update_interval: 60s

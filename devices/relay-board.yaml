@@ -17,17 +17,10 @@ globals:
     restore_value: false
     initial_value: '"veg"'
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  ap:
-    ssid: "relay-board"
-    password: "NoVNR2vHou"
+<< !include common.yaml
 
-captive_portal:
 logger:
 api:
-ota:
 
 # i2c:
 #   - sda: 5

@@ -1,0 +1,5 @@
+---
+<<: !include common/wifi.yaml
+<<: !include common/ota.yaml
+<<: !include common/api.yaml
+<<: !include common/logging.yaml
