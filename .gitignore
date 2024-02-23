@@ -2,3 +2,4 @@
 .esphome/
 images/
 fonts/
+.venv
