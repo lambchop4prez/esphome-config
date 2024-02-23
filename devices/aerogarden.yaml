@@ -49,6 +49,12 @@ switch:
     id: fogger
     name: Relay 2
 
+  - platform: template
+    name: Fogger Enable
+    id: fogger_enable
+    optimistic: true
+    assumed_state: false
+
 time:
   - platform: sntp
     id: sntp_time
@@ -57,9 +63,13 @@ time:
       - seconds: 0
         minutes: /10
         then:
-          - switch.turn_on: fogger
-          - delay: 10s
-          - switch.turn_off: fogger
+          - if:
+              condition:
+                switch.is_on: fogger_enable
+              then:
+                - switch.turn_on: fogger
+                - delay: 10s
+                - switch.turn_off: fogger
       # Turn on light at 6 AM every day
       - seconds: 0
         minutes: 0
