@@ -1,6 +1,6 @@
 substitutions:
-  esp_name: ESP Display #Device Name
-  esp_hostname: esp-display
+  devicename: epaper1
+  friendly_name: EPaper Display #Device Name
   #ip_address: 192.168.1.107
   #ip_gw: 192.168.1.1
   #ip_netmask: 255.255.255.0
@@ -11,20 +11,11 @@ substitutions:
   images_dir: ./images
 
 esphome:
-  name: ${esp_hostname}
+  name: ${devicename}
   platform: ESP32
   board: esp32dev
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  #manual_ip:
-  #  static_ip: ${ip_address}
-  #  gateway: ${ip_gw}
-  #  subnet: ${ip_netmask}
-  ap:
-    ssid: "${esp_name} Fallback Hotspot"
-    # password: !secret ap_password
+<<: !include common.yaml
 
 globals:
   - id: icon_wifi
@@ -47,15 +38,6 @@ deep_sleep:
 sun:
   longitude: !secret longitude
   latitude: !secret latitude
-
-captive_portal:
-
-logger:
-  level: DEBUG
-
-api:
-
-ota:
 
 font:
   - file: "${fonts_dir}/VCR_OSD_MONO_1.001.ttf"
@@ -142,12 +124,12 @@ font:
       - "\U000F05AA" # Wifi Off
       - "\U000F0BA3" # jack-o-lantern
 
-image:
-  - file: "${images_dir}/Bidoof.png"
-    id: img_bidoof
-    resize: 300x300
-    type: BINARY
-    dither: FLOYDSTEINBERG
+# image:
+#   - file: "${images_dir}/Bidoof.png"
+#     id: img_bidoof
+#     resize: 300x300
+#     type: BINARY
+#     dither: FLOYDSTEINBERG
   # - file: "${images_dir}/001Bulbasaur.png"
   #   id: img_bulbasaur
   #   resize: 300x300
@@ -155,9 +137,13 @@ image:
   #   dither: FLOYDSTEINBERG
 
 external_components:
-  - source: github://ashald/esphome@lilygo-t5-47
+  - source:
+      type: git
+      url: https://github.com/vbaksa/esphome
+      ref: dev
     components:
-      - lilygo_t5_47
+      - lilygo_t5_47_battery
+      - lilygo_t5_47_display
 
 ###
 # Physical Inputs
@@ -173,10 +159,10 @@ i2c:
 
 button:
   - platform: restart
-    name: "${esp_name} Restart"
+    name: "${friendly_name} Restart"
 
   - platform: template
-    name: "${esp_name} Refresh"
+    name: "${friendly_name} Refresh"
     icon: "mdi:update"
     on_press:
       then:
@@ -186,13 +172,18 @@ button:
 # Sensors
 ###
 sensor:
+  - platform: lilygo_t5_47_battery
+    update_interval: 5s
+    id: batt_volt
+    voltage:
+      name: "Battery Voltage"
   - platform: uptime
-    name: ${esp_name} Uptime
+    name: ${friendly_name} Uptime
     update_interval: 60s
 
   - platform: wifi_signal
     id: wifi_strength
-    name: "${esp_name} WiFi Signal"
+    name: "${friendly_name} WiFi Signal"
     update_interval: 15s
     on_value_range:
       - above: -70
@@ -213,17 +204,9 @@ sensor:
               id: icon_wifi
               value: '"\U000F0928"' # High
 
-  - platform: adc
-    pin: GPIO36
-    name: "${esp_name} Battery Voltage"
-    id: batt_volt
-    attenuation: 11db
-    update_interval: never
-    filters:
-      - multiply: 2
 
   - platform: template
-    name: "${esp_name} Battery"
+    name: "${friendly_name} Battery"
     id: batt
     unit_of_measurement: "%"
     accuracy_decimals: 0
@@ -235,45 +218,45 @@ sensor:
 
   - platform: aht10
     # temperature:
-    #   name: "${esp_name} Temperature"
+    #   name: "${friendly_name} Temperature"
     humidity:
-      name: "${esp_name} Humidity"
+      name: "${friendly_name} Humidity"
       id: internal_humidity
     update_interval: 60s
 
   - platform: bmp280
     temperature:
-      name: "${esp_name} Temperature"
+      name: "${friendly_name} Temperature"
       oversampling: 16x
       id: internal_temp
     pressure:
-      name: "${esp_name} Pressure"
+      name: "${friendly_name} Pressure"
       id: internal_pressure
     address: 0x77
     update_interval: 60s
 
 binary_sensor:
-  - platform: gpio
-    pin:
-      number: GPIO39
-      inverted: true
-    name: "${esp_name} Button 1"
-    on_press:
-      then:
-       - display.page.show_next: t5_display
-       - component.update: t5_display
+  # - platform: gpio
+  #   pin:
+  #     number: GPIO39
+  #     inverted: true
+  #   name: "${friendly_name} Button 1"
+  #   on_press:
+  #     then:
+  #      - display.page.show_next: t5_display
+  #      - component.update: t5_display
 
   - platform: gpio
     pin:
       number: GPIO34
       inverted: true
-    name: "${esp_name} Button 2"
+    name: "${friendly_name} Button 2"
 
   - platform: gpio
     pin:
       number: GPIO35
       inverted: true
-    name: "${esp_name} Button 3"
+    name: "${friendly_name} Button 3"
     on_press:
       then:
          - display.page.show_previous: t5_display
@@ -346,7 +329,7 @@ script:
                 sleep_duration: ${sleep_time}
 
 display:
-  - platform: lilygo_t5_47
+  - platform: lilygo_t5_47_display
     id: t5_display
     rotation: 0
     update_interval: never
@@ -357,7 +340,7 @@ display:
           #define yres 540
           it.print(480, 15, id(vga_font), TextAlign::CENTER, "Loading");
           it.print(xres - 30, 5, id(font_icons_tiny), TextAlign::TOP_CENTER, id(icon_wifi).c_str());
-          it.image(480, 30, id(img_bidoof));
+          //it.image(480, 30, id(img_bidoof));
       - id: weather
         lambda: |-
           #include<string>
@@ -441,5 +424,3 @@ display:
           }
 
           y+=135+y_pad;
-          //# it.image(((xres / 4) - x_pad) - 150, y, id(img_bulbasaur));
-          it.image(((xres/2) + ((xres / 4) - x_pad)) - 150, y, id(img_bidoof));
