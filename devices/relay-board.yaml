@@ -17,10 +17,7 @@ globals:
     restore_value: false
     initial_value: '"veg"'
 
-<< !include common.yaml
-
-logger:
-api:
+<<: !include common.yaml
 
 # i2c:
 #   - sda: 5
